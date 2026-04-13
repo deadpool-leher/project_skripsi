@@ -113,12 +113,16 @@ button:hover {
     <h2>Create Account</h2>
     <p>Sign up to get started</p>
 
-    <input type="text" placeholder="Full Name">
-    <input type="email" placeholder="Email">
-    <input type="password" placeholder="Password">
-    <input type="password" placeholder="Confirm Password">
+<form action="{{ route('register.process') }}" method="POST">
+    @csrf
 
-    <button>Sign Up</button>
+    <input type="text" name="name" placeholder="Full Name">
+    <input type="email" name="email" placeholder="Email">
+    <input type="password" name="password" placeholder="Password">
+    <input type="password" name="password_confirmation" placeholder="Confirm Password">
+
+    <button type="submit">Sign Up</button>
+</form>
 
     <div class="login">
         Already have an account? <a href="/login">Login</a>

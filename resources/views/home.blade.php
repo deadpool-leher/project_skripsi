@@ -9,25 +9,35 @@
 <p class="tagline">✨ Ice Cream Sedap Sekali ✨</p>
 
 <div class="promo-badge">
-    Active Promotions <span>4</span>
+    beli sekarang <span>dapatkan promo</span>
 </div>
 
 <!-- SLIDER -->
 <div class="slider">
     <div class="slides">
-        <div class="slide active">
-            <h2>30% OFF</h2>
-            <p>Weekend Special</p>
+        @foreach($promos as $key => $promo)
+        <div class="slide {{ $key == 0 ? 'active' : '' }}"
+        style="background-image: url('{{ asset('storage/'.$promo->gambar) }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;">
+
+        <h2>{{ $promo->diskon }}</h2>
+        <p style="font-weight:600;">
+        {{ $promo->judul }}
+        </p>
+        <small style="
+            display:block;
+            margin-top:5px;
+            font-size:12px;
+            opacity:0.9;
+        ">
+            {{ $promo->deskripsi }}
+        </small>
         </div>
-        <div class="slide">
-            <h2>Buy 1 Get 1</h2>
-            <p>Special Promo</p>
-        </div>
-        <div class="slide">
-            <h2>Gratis Ongkir</h2>
-            <p>Untuk area kota</p>
-        </div>
+        @endforeach
     </div>
+        
 
     <button class="prev">❮</button>
     <button class="next">❯</button>

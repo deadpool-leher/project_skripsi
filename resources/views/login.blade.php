@@ -116,10 +116,14 @@ button:hover {
     <h2>Welcome</h2>
     <p>Login to your account on Es Cream Treman site</p>
 
-    <input type="email" placeholder="Email">
-    <input type="password" placeholder="Password">
+    <form action="{{ route('login.process') }}" method="POST">
+    @csrf
 
-    <button>Login</button>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password" required>
+
+    <button type="submit">Login</button>
+    </form>
 
     <div class="signup">
         <a href="{{ route('register') }}">Sign up</a>
