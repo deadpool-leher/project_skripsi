@@ -9,6 +9,10 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\SalesController;
+use App\Http\Controllers\AdminDiscountController;
+use App\Http\Controllers\CustomerDiscountController;
 /*
 |--------------------------------------------------------------------------
 | AUTH
@@ -79,9 +83,16 @@ Route::post('/admin/promo/update/{id}', [PromoController::class, 'update'])->nam
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::get('/inventory', function () {
-    return view('inventory');
-});
+Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+Route::post('/inventory/store', [InventoryController::class, 'store'])->name('inventory.store');
+Route::put('/inventory/update/{id}', [InventoryController::class, 'update'])->name('inventory.update');
+Route::delete('/inventory/delete/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
+Route::get('/sales/data', [SalesController::class, 'data'])->name('sales.data');
+Route::get('/admin/discount', [AdminDiscountController::class, 'index'])->name('admin.discount.index');
+Route::post('/admin/discount/store', [AdminDiscountController::class, 'store'])->name('admin.discount.store');
+Route::put('/admin/discount/update/{id}', [AdminDiscountController::class, 'update'])->name('admin.discount.update');
+Route::delete('/admin/discount/delete/{id}', [AdminDiscountController::class, 'destroy'])->name('admin.discount.destroy');
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER
@@ -97,6 +108,7 @@ Route::get('/cart/remove/{id}', [CustomerController::class, 'remove']);
 
 Route::post('/checkout', [CustomerController::class, 'checkout']);
 Route::get('/tracking', [CustomerController::class, 'tracking']);
+Route::get('/tracking/data/{id}', [CustomerController::class, 'trackingData'])->name('tracking.data');
 
 Route::get('/cart/clear', function () {
     session()->forget('cart');
@@ -105,6 +117,5 @@ Route::get('/cart/clear', function () {
 
 Route::get('/myOrders', [CustomerController::class, 'myOrders']);
 
-Route::get('/discount', function () {
-    return view('customer-discount');
-})->name('discount');
+Route::get('/discount', [CustomerDiscountController::class, 'index'])->name('discount');
+Route::post('/discount/claim/{id}', [CustomerDiscountController::class, 'claim'])->name('discount.claim');

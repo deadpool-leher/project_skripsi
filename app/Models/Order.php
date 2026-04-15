@@ -7,18 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     public $timestamps = false;
+
     protected $fillable = [
         'nama',
         'email',
         'produk',
+        'subtotal',
         'total',
+        'discount_code',
+        'discount_amount',
         'status',
         'metode',
         'waktu',
         'alamat',
         'latitude',
-        'longitude'
+        'longitude',
+        'created_at',
     ];
+
+    protected $casts = [
+        'produk' => 'array',
+    ];
+
     public function getStatusLabelAttribute()
 {
     return [

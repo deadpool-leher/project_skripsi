@@ -166,9 +166,9 @@ body {
         <div class="menu">
             <a href="{{ route('dashboard') }}">Home</a>
             <a href="{{ route('incoming.orders') }}" class="active">Incoming Orders</a>
-            <a href="#">Discount</a>
-            <a href="#">Inventory</a>
-            <a href="#">Sales</a>
+            <a href="{{ route('admin.discount.index') }}">Discount</a>
+            <a href="{{ route('inventory.index') }}">Inventory</a>
+            <a href="{{ route('sales.index') }}">Sales</a>
             <a href="/admin/promo">Promo Management</a>
         </div>
     </div>
