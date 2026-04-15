@@ -10,21 +10,25 @@ class IncomingOrderController extends Controller
     // tampilkan data ke admin
   public function index($type = null)
 {
-    // 🔥 DATA CARD (SELALU SAMA)
+    // DATA CARD 
     $totalBaru = Order::where('status', 'baru')->count();
     $totalProses = Order::where('status', 'diproses')->count();
     $totalHariIni = Order::where('status', 'selesai')->count();
 
-    // 🔥 DATA LIST (BERDASARKAN TAB)
+    // DATA LIST 
     if ($type == 'baru') {
-        $orders = Order::where('status', 'baru')->get();
-    } 
+    $orders = Order::where('status', 'baru')
+        ->where('status', '!=', 'ditolak')
+        ->get();
+} 
     elseif ($type == 'aktif') {
-        $orders = Order::whereIn('status', ['diproses','siap'])->get();
-    }
+    $orders = Order::whereIn('status', ['diproses','siap'])
+        ->where('status', '!=', 'ditolak')
+        ->get();
+}
     else {
-        $orders = Order::all();
-    }
+    $orders = Order::where('status', '!=', 'ditolak')->get();
+}
 
     return view('incoming-orders', compact(
         'orders',
@@ -101,7 +105,8 @@ public function store(Request $request)
     $order = Order::find($id);
 
     if ($order) {
-        $order->delete(); // 🔥 langsung hapus dari database
+        $order->status = 'ditolak';
+        $order->save();
     }
 
     return redirect('/incoming-orders');

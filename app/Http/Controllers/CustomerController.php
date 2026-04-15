@@ -88,24 +88,28 @@ class CustomerController extends Controller
         $total += $item['harga'] * $item['qty'];
     }
 
-    // 🔥 SIMPAN ORDER (sementara pakai session dulu)
-    $order = [
-        'id' => rand(100,999),
-        'items' => $cart,
-        'total' => $total,
-        'metode' => $request->metode,
-        'waktu' => $request->waktu,
-        'status' => 'menunggu'
-    ];
+    // SIMPAN KE DATABASE 
+    Order::create([
+    'nama' => session('user'),
+    'email' => session('email'),
 
+    'produk' => json_encode(session('cart')),
+    'total' => $request->total,
 
-    // 🔥 MASUKKAN KE ADMIN (shared data)
-   
+    'metode' => $request->metode,
+    'tipe_pengiriman' => $request->tipe_pengiriman, 
 
-    // 🔥 CLEAR CART
+    'waktu' => $request->waktu,
+
+    'alamat' => $request->alamat, 
+    'latitude' => $request->latitude,
+    'longitude' => $request->longitude,
+
+    'status' => 'baru'
+]);
+
     session()->forget('cart');
 
-    // 🔥 REDIRECT KE TRACKING
     return redirect('/tracking');
 }
 

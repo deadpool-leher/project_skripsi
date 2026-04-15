@@ -73,17 +73,54 @@
 
     @if($order)
 
-    @php
-    $status = $order->status ?? 'baru';
-    @endphp
+@php
+$status = $order->status ?? 'baru';
+@endphp
 
-    <div class="price-box">
-        <h3>Rp {{ number_format($order->total) }}</h3>
-        <p>{{ $order->metode ?? '-' }} • {{ $order->waktu ?? '-' }}</p>
+<p>Status: <b>{{ $order->status_label }}</b></p>
+
+<div class="price-box">
+    <h3>Rp {{ number_format($order->total) }}</h3>
+    <p>{{ $order->metode ?? '-' }} • {{ $order->waktu ?? '-' }}</p>
+</div>
+
+{{-- PICKUP MAP --}}
+@if($order->alamat == 'ambil ditempat')
+    <div style="margin:10px 0;">
+        <a href="https://maps.app.goo.gl/WqHZTi85pbS2GqaBA" target="_blank"
+           style="
+            display:block;
+            padding:10px;
+            border-radius:10px;
+            background:#eef1ff;
+            color:#4f46e5;
+            text-decoration:none;
+            font-weight:500;
+        ">
+            📍 Lihat Lokasi Pickup
+        </a>
+    </div>
+@endif
+
+{{-- STATUS --}}
+@if($order->status == 'ditolak')
+
+    <div style="
+        background:#fee2e2;
+        color:#991b1b;
+        padding:12px;
+        border-radius:10px;
+        margin:10px 0;
+        font-weight:500;
+    ">
+        ❌ Pesanan Anda Ditolak
+        <br>
+        Silakan lakukan pemesanan ulang.
     </div>
 
-    <div class="status-title">Status Pesanan</div>
+@else
 
+    <div class="status-title">Status Pesanan</div>
     <div style="display:flex; flex-direction:column; gap:10px;">
 
         <div class="step {{ $status == 'baru' ? 'active' : '' }}">
@@ -108,15 +145,17 @@
 
     </div>
 
-    <button class="btn-close" onclick="window.location.href='/customer'">
-        Tutup
-    </button>
+@endif
 
-    @else
+<button class="btn-close" onclick="window.location.href='/customer'">
+    Tutup
+</button>
 
-    <p>Tidak ada pesanan</p>
+@else
 
-    @endif
+<p>Tidak ada pesanan</p>
+
+@endif
 
 </div>
 

@@ -14,6 +14,18 @@ class Order extends Model
         'total',
         'status',
         'metode',
-        'waktu'
+        'waktu',
+        'alamat',
+        'latitude',
+        'longitude'
     ];
+    public function getStatusLabelAttribute()
+{
+    return [
+        'baru' => 'Menunggu Konfirmasi',
+        'diproses' => 'Sedang Diproses',
+        'siap' => 'Siap Diambil',
+        'selesai' => 'Sudah Diambil'
+    ][$this->status] ?? $this->status;
+}
 }

@@ -78,6 +78,10 @@ Route::get('/admin/promo', [PromoController::class, 'index']);
 Route::post('/admin/promo/update/{id}', [PromoController::class, 'update'])->name('promo.update');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+Route::get('/inventory', function () {
+    return view('inventory');
+});
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER

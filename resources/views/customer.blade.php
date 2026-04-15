@@ -414,6 +414,7 @@ $total += $item['harga'] * $item['qty'];
         </div>
 
         <div id="timeSection" style="display:none;">
+            
             <p>Select Time Slot</p>
 
             <div class="time-grid">
@@ -423,7 +424,22 @@ $total += $item['harga'] * $item['qty'];
                 <button class="time-btn" onclick="selectTime('12:00 - 13:00', this)">12:00 - 13:00</button>
             </div>
         </div>
+        <div id="alamatSection" style="display:none; margin-top:10px;">
+        <button onclick="useLocation()" style="
+        width:100%;
+        padding:10px;
+        border:none;
+        border-radius:10px;
+        background:linear-gradient(90deg,#6366f1,#7c3aed);
+        color:white;
+        margin-bottom:10px;
+    ">
+        Gunakan Lokasi Saya
+    </button>
+    <textarea name="alamat" id="alamat" placeholder="Masukkan alamat lengkap dan nomor telfon"
+        style="width:100%; padding:10px; border-radius:10px;"></textarea>
 
+</div>
         <div class="action-group">
             <button class="btn-back" onclick="closeModal()">Back</button>
             <button type="button" onclick="goToPayment(); return false;" id="continueBtn">
@@ -470,11 +486,16 @@ $total += $item['harga'] * $item['qty'];
     @csrf
 
     <input type="hidden" name="metode" id="metode">
+    <input type="hidden" name="tipe_pengiriman" id="tipe_pengiriman">
     <input type="hidden" name="waktu" id="waktu">
     <input type="hidden" name="total" value="{{ $total }}">
     
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
 
-    <button type="submit">Confirm Payment</button>
+     <input type="hidden" name="alamat" id="alamatHidden">
+
+    <button type="submit" id="confirmBtn">Confirm Payment</button>
     </form>
 
     </div>
@@ -496,14 +517,22 @@ function closeModal() {
 function selectMethod(method) {
     selectedMethod = method;
 
+    document.getElementById('tipe_pengiriman').value = method;
     document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(method + 'Btn').classList.add('active');
 
-    if (method === 'pickup') {
-        document.getElementById('timeSection').style.display = 'block';
+    // reset time
+    selectedTime = null;
+    document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+
+    // 🔥 KUNCI: dua-duanya tampilkan time
+    document.getElementById('timeSection').style.display = 'block';
+
+    // alamat hanya untuk delivery
+    if (method === 'delivery') {
+        document.getElementById('alamatSection').style.display = 'block';
     } else {
-        document.getElementById('timeSection').style.display = 'none';
-        selectedTime = null;
+        document.getElementById('alamatSection').style.display = 'none';
     }
 
     checkReady();
@@ -522,8 +551,7 @@ function checkReady() {
     const btn = document.getElementById('continueBtn');
 
     if (
-        (selectedMethod === 'pickup' && selectedTime) ||
-        (selectedMethod === 'delivery')
+        selectedMethod && selectedTime
     ) {
         btn.disabled = false;
         btn.classList.add('active');
@@ -551,19 +579,17 @@ function closePayment() {
     document.getElementById('paymentModal').style.display = 'none';
 }
 
-function selectPayment(type, el) {
-    selectedPayment = type;
-
-    document.querySelectorAll('.pay-option').forEach(e => e.classList.remove('active'));
-    el.classList.add('active');
-
-    document.getElementById('confirmBtn').disabled = false;
-    document.getElementById('confirmBtn').classList.add('active');
-}
-
 function goToPayment() {
     closeModal(); 
     openPaymentModal(); 
+
+    let alamat = document.getElementById('alamat').value;
+
+    if (selectedMethod === 'pickup') {
+        alamat = 'ambil ditempat'; 
+    }
+
+    document.getElementById('alamatHidden').value = alamat;
 }
 
 function selectPayment(type, el) {
@@ -577,6 +603,29 @@ function selectPayment(type, el) {
 
     document.getElementById('confirmBtn').disabled = false;
     document.getElementById('confirmBtn').classList.add('active');
+}
+
+function useLocation() {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+
+        let lat = pos.coords.latitude;
+        let lon = pos.coords.longitude;
+
+        // simpan ke hidden input
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lon;
+
+        try {
+            let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            let data = await res.json();
+
+            document.getElementById('alamat').value = data.display_name;
+
+        } catch {
+            alert("Gagal ambil alamat");
+        }
+
+    });
 }
 </script>
 

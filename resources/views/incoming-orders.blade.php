@@ -230,11 +230,13 @@ body {
     <div class="order-detail">
         {{ $order->nama }} <br>
         Delivery: {{ $order->waktu }} <br>
-        Alamat: {{ $order->alamat ?? 'COD'}} <br>
-    </div>
+        Alamat: {{ $order->metode == 'pickup' ? 'COD' : $order->alamat }} <br>
 
-    <div class="order-detail">
-        {{ $order->produk }}
+        @if($order->latitude && $order->longitude)
+        <a href="https://www.google.com/maps?q={{ $order->latitude }},{{ $order->longitude }}" target="_blank">
+        📍 Lihat Lokasi
+    </a>
+    @endif
     </div>
 
     <div class="actions">
