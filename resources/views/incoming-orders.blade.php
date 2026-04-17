@@ -224,13 +224,19 @@ body {
 
     <div class="order-header">
         <strong>#ES-00{{ $order->id }}</strong>
-        <strong>Rp {{ $order->total }}</strong>
+        <strong>Rp {{ number_format($order->total, 0, ',', '.') }}</strong>
     </div>
 
     <div class="order-detail">
         {{ $order->nama }} <br>
         Delivery: {{ $order->waktu }} <br>
-        Alamat: {{ $order->metode == 'pickup' ? 'COD' : $order->alamat }} <br>
+        Pembayaran: {{ strtoupper($order->metode ?? '-') }} <br>
+        Alamat: {{ $order->alamat === 'ambil ditempat' ? 'Pickup di toko' : $order->alamat }} <br>
+        @if(($order->discount_amount ?? 0) > 0)
+        Subtotal: Rp {{ number_format($order->subtotal, 0, ',', '.') }} <br>
+        Diskon{{ $order->discount_code ? ' (' . $order->discount_code . ')' : '' }}:
+        - Rp {{ number_format($order->discount_amount, 0, ',', '.') }} <br>
+        @endif
 
         @if($order->latitude && $order->longitude)
         <a href="https://www.google.com/maps?q={{ $order->latitude }},{{ $order->longitude }}" target="_blank">

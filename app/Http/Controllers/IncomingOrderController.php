@@ -55,6 +55,7 @@ class IncomingOrderController extends Controller
             'latitude' => 'nullable',
             'longitude' => 'nullable',
             'user_discount_id' => 'nullable|integer',
+            'discount_code' => 'nullable|string|max:50',
         ]);
 
         $cart = session('cart') ?? [];
@@ -92,10 +93,18 @@ class IncomingOrderController extends Controller
         $discountCode = null;
         $userDiscount = null;
 
-        if ($request->filled('user_discount_id')) {
+        if ($request->filled('user_discount_id') || $request->filled('discount_code')) {
             $userDiscount = UserDiscount::with('discount')
-                ->where('id', $request->user_discount_id)
                 ->where('user_id', $user->id)
+                ->whereNull('used_at')
+                ->when($request->filled('user_discount_id'), function ($query) use ($request) {
+                    $query->where('id', $request->user_discount_id);
+                })
+                ->when($request->filled('discount_code'), function ($query) use ($request) {
+                    $query->whereHas('discount', function ($discountQuery) use ($request) {
+                        $discountQuery->whereRaw('UPPER(code) = ?', [strtoupper($request->discount_code)]);
+                    });
+                })
                 ->first();
 
             if (!$userDiscount || !$userDiscount->discount) {
@@ -112,7 +121,7 @@ class IncomingOrderController extends Controller
                 return back()->with('error', 'Diskon sudah kedaluwarsa.');
             }
 
-            if ($discount->usage_limit && $discount->userDiscounts()->count() > $discount->usage_limit) {
+            if ($discount->usage_limit && $discount->userDiscounts()->count() >= $discount->usage_limit) {
                 return back()->with('error', 'Kuota diskon sudah habis.');
             }
 
@@ -247,6 +256,9 @@ class IncomingOrderController extends Controller
             'status' => $order->status,
             'status_label' => $order->status_label,
             'total' => (int) $order->total,
+            'subtotal' => (int) ($order->subtotal ?? $order->total),
+            'discount_code' => $order->discount_code,
+            'discount_amount' => (int) ($order->discount_amount ?? 0),
             'metode' => $order->metode ?? '-',
             'waktu' => $order->waktu ?? '-',
             'alamat' => $order->alamat,

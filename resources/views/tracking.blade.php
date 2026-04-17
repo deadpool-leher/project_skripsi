@@ -1,6 +1,8 @@
-<!DOCTYPE html>
-<html>
+ï»¿<!DOCTYPE html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lacak Pesanan</title>
     <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
     <script src="https://unpkg.com/laravel-echo/dist/echo.iife.js"></script>
@@ -12,7 +14,7 @@
         }
 
         .card {
-            width: 400px;
+            width: min(420px, calc(100vw - 32px));
             margin: 50px auto;
             background: white;
             padding: 20px;
@@ -31,11 +33,56 @@
             color: white;
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .price-box h3 {
             margin: 0;
+        }
+
+        .price-box p,
+        .price-box small {
+            display: block;
+            margin: 6px 0 0;
+        }
+
+        .info-panel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0 16px;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .info-panel div + div {
+            margin-top: 6px;
+        }
+
+        .qris-box {
+            margin: 14px 0;
+            padding: 14px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .qris-box h4 {
+            margin: 0 0 6px;
+        }
+
+        .qris-box p {
+            margin: 0 0 12px;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .qris-image {
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            background: white;
         }
 
         .status-title {
@@ -74,13 +121,31 @@
     @if($order)
         @php
             $status = $order->status ?? 'baru';
+            $isPickup = $order->alamat == 'ambil ditempat';
         @endphp
 
         <p>Status: <b id="trackingStatusText">{{ $order->status_label }}</b></p>
 
         <div class="price-box" id="priceBox">
-            <h3 id="trackingTotal">Rp {{ number_format($order->total) }}</h3>
-            <p id="trackingMeta">{{ $order->metode ?? '-' }} • {{ $order->waktu ?? '-' }}</p>
+            <h3 id="trackingTotal">Rp {{ number_format($order->total, 0, ',', '.') }}</h3>
+            <p id="trackingMeta">{{ $order->metode ?? '-' }} â€¢ {{ $order->waktu ?? '-' }}</p>
+            <small id="trackingPaymentLabel">Pembayaran: {{ strtoupper($order->metode ?? '-') }}</small>
+            @if(($order->discount_amount ?? 0) > 0)
+                <small id="trackingDiscountInfo">{{ $order->discount_code ? $order->discount_code . ' dipakai, ' : '' }}hemat Rp {{ number_format($order->discount_amount, 0, ',', '.') }}</small>
+            @else
+                <small id="trackingDiscountInfo" style="display:none;"></small>
+            @endif
+        </div>
+
+        <div class="info-panel">
+            <div>Subtotal: <span id="trackingSubtotal">Rp {{ number_format($order->subtotal ?? $order->total, 0, ',', '.') }}</span></div>
+            <div id="trackingDiscountRow" style="{{ ($order->discount_amount ?? 0) > 0 ? '' : 'display:none;' }}">Diskon: <span id="trackingDiscountAmount">- Rp {{ number_format($order->discount_amount ?? 0, 0, ',', '.') }}</span></div>
+        </div>
+
+        <div class="qris-box" id="qrisBox" style="{{ ($order->metode ?? '') === 'qris' ? '' : 'display:none;' }}">
+            <h4>Bayar dengan QRIS</h4>
+            <p>Scan kode berikut untuk menyelesaikan pembayaran.</p>
+            <img src="{{ asset('gambar/Kode_QRIS_Escreamtreman.png') }}" alt="Kode QRIS Es Cream Treman" class="qris-image">
         </div>
 
         <div id="pickupBox" style="margin:10px 0; {{ $order->alamat == 'ambil ditempat' ? '' : 'display:none;' }}">
@@ -128,7 +193,7 @@
                 </div>
 
                 <div class="step {{ in_array($status, ['siap','selesai']) ? 'active' : '' }}" id="stepSiap">
-                    Siap Diambil
+                    {{ $isPickup ? 'Siap Diambil' : 'Siap Diantar' }}
                 </div>
 
                 <div class="step {{ $status == 'selesai' ? 'active' : '' }}" id="stepSelesai">
@@ -160,6 +225,10 @@ function formatRupiah(value) {
     return 'Rp ' + new Intl.NumberFormat('id-ID').format(value || 0);
 }
 
+function formatPaymentLabel(method) {
+    return method ? String(method).toUpperCase() : '-';
+}
+
 function setStepState(id, active) {
     const element = document.getElementById(id);
     if (element) {
@@ -170,12 +239,25 @@ function setStepState(id, active) {
 function updateTracking(order) {
     document.getElementById('trackingStatusText').innerText = order.status_label || '-';
     document.getElementById('trackingTotal').innerText = formatRupiah(order.total);
-    document.getElementById('trackingMeta').innerText = `${order.metode || '-'} • ${order.waktu || '-'}`;
+    document.getElementById('trackingMeta').innerText = `${order.metode || '-'} â€¢ ${order.waktu || '-'}`;
+    document.getElementById('trackingPaymentLabel').innerText = `Pembayaran: ${formatPaymentLabel(order.metode)}`;
+    document.getElementById('trackingSubtotal').innerText = formatRupiah(order.subtotal || order.total);
+
+    const discountAmount = order.discount_amount || 0;
+    const discountCode = order.discount_code ? `${order.discount_code} dipakai, ` : '';
+    document.getElementById('trackingDiscountAmount').innerText = '- ' + formatRupiah(discountAmount);
+    document.getElementById('trackingDiscountRow').style.display = discountAmount > 0 ? 'block' : 'none';
+
+    const discountInfo = document.getElementById('trackingDiscountInfo');
+    discountInfo.style.display = discountAmount > 0 ? 'block' : 'none';
+    discountInfo.innerText = discountAmount > 0 ? `${discountCode}hemat ${formatRupiah(discountAmount)}` : '';
 
     const isRejected = order.status === 'ditolak';
     document.getElementById('rejectedBox').style.display = isRejected ? 'block' : 'none';
     document.getElementById('statusStepsWrapper').style.display = isRejected ? 'none' : 'block';
     document.getElementById('pickupBox').style.display = order.alamat === 'ambil ditempat' ? 'block' : 'none';
+    document.getElementById('qrisBox').style.display = order.metode === 'qris' ? 'block' : 'none';
+    document.getElementById('stepSiap').innerText = order.alamat === 'ambil ditempat' ? 'Siap Diambil' : 'Siap Diantar';
 
     setStepState('stepBaru', order.status === 'baru');
     setStepState('stepKonfirmasi', ['diproses', 'siap', 'selesai'].includes(order.status));

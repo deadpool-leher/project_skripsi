@@ -389,6 +389,11 @@ body {
     background: #eef1ff;
 }
 
+.pay-option strong,
+.pay-option small {
+    display: block;
+}
+
 @media (max-width: 980px) {
     body {
         display: block;
@@ -613,6 +618,7 @@ body {
         <div class="info-box">
             <div>Type: <span id="payMethod"></span></div>
             <div>Time: <span id="payTime"></span></div>
+            <div>Payment: <span id="payPayment">-</span></div>
         </div>
 
         <div class="pay-option" onclick="selectPayment('cash', this)">
@@ -620,7 +626,7 @@ body {
             <small>Cash payment at the counter</small>
         </div>
 
-        <div class="pay-option">
+        <div class="pay-option" onclick="selectPayment('qris', this)">
             <strong>Pay with QRIS</strong>
             <small>Scan QR code to pay</small>
         </div>
@@ -689,8 +695,9 @@ function checkReady() {
 
 function openPaymentModal() {
     updateDiscountPreview();
-    document.getElementById('payMethod').innerText = selectedMethod;
+    document.getElementById('payMethod').innerText = selectedMethod === 'pickup' ? 'pickup' : 'delivery';
     document.getElementById('payTime').innerText = selectedTime || '-';
+    document.getElementById('payPayment').innerText = selectedPayment ? formatPaymentLabel(selectedPayment) : '-';
     document.getElementById('paymentModal').style.display = 'flex';
 }
 
@@ -716,8 +723,21 @@ function selectPayment(type, el) {
     document.getElementById('waktu').value = selectedTime;
     document.querySelectorAll('.pay-option').forEach(e => e.classList.remove('active'));
     el.classList.add('active');
+    document.getElementById('payPayment').innerText = formatPaymentLabel(type);
     document.getElementById('confirmBtn').disabled = false;
     document.getElementById('confirmBtn').classList.add('active');
+}
+
+function formatPaymentLabel(type) {
+    if (type === 'qris') {
+        return 'QRIS';
+    }
+
+    if (type === 'cash') {
+        return 'Cash';
+    }
+
+    return type || '-';
 }
 
 function applyCoupon() {
