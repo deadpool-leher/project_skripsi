@@ -24,7 +24,7 @@ class IncomingOrderController extends Controller
     public function index($type = null)
     {
         $totalBaru = Order::where('status', 'baru')->count();
-        $totalProses = Order::where('status', 'diproses')->count();
+        $totalProses = Order::whereIn('status', ['diproses', 'siap'])->count();
         $totalHariIni = Order::where('status', 'selesai')->count();
 
         if ($type === 'baru') {

@@ -121,6 +121,44 @@ body {
     color:#555;
 }
 
+.payment-proof {
+    margin-top:12px;
+    padding:12px;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    background:#f9fafb;
+}
+
+.payment-proof strong {
+    display:block;
+    margin-bottom:8px;
+    color:#111827;
+}
+
+.payment-proof img {
+    width:180px;
+    max-width:100%;
+    max-height:180px;
+    object-fit:contain;
+    display:block;
+    border-radius:8px;
+    border:1px solid #e5e7eb;
+    background:white;
+}
+
+.payment-proof a {
+    display:inline-block;
+    margin-top:8px;
+    color:#4f46e5;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.proof-empty {
+    color:#b45309;
+    font-weight:600;
+}
+
 /* BUTTON */
 .actions {
     display:flex;
@@ -243,6 +281,18 @@ body {
         📍 Lihat Lokasi
     </a>
     @endif
+
+        @if(($order->metode ?? '') === 'qris')
+            <div class="payment-proof">
+                <strong>Bukti Pembayaran QRIS</strong>
+                @if($order->payment_proof)
+                    <img src="{{ asset($order->payment_proof) }}" alt="Bukti pembayaran order #ES-00{{ $order->id }}">
+                    <a href="{{ asset($order->payment_proof) }}" target="_blank">Lihat gambar penuh</a>
+                @else
+                    <span class="proof-empty">Customer belum upload bukti pembayaran.</span>
+                @endif
+            </div>
+        @endif
     </div>
 
     <div class="actions">

@@ -22,6 +22,7 @@ class Order extends Model
         'alamat',
         'latitude',
         'longitude',
+        'payment_proof',
         'created_at',
     ];
 

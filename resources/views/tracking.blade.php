@@ -85,6 +85,74 @@
             background: white;
         }
 
+        .alert {
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin: 10px 0 14px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .proof-form {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .proof-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .proof-form input[type="file"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .proof-form button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: #16a34a;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .proof-preview {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .proof-preview img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            display: block;
+            margin-top: 8px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+
         .status-title {
             font-weight: bold;
             margin-bottom: 10px;
@@ -124,6 +192,18 @@
             $isPickup = $order->alamat == 'ambil ditempat';
         @endphp
 
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-error">{{ session('error') }}</div>
+        @endif
+
+        @if($errors->has('payment_proof'))
+            <div class="alert alert-error">{{ $errors->first('payment_proof') }}</div>
+        @endif
+
         <p>Status: <b id="trackingStatusText">{{ $order->status_label }}</b></p>
 
         <div class="price-box" id="priceBox">
@@ -146,6 +226,23 @@
             <h4>Bayar dengan QRIS</h4>
             <p>Scan kode berikut untuk menyelesaikan pembayaran.</p>
             <img src="{{ asset('gambar/Kode_QRIS_Escreamtreman.png') }}" alt="Kode QRIS Es Cream Treman" class="qris-image">
+
+            <form class="proof-form" method="POST" action="{{ route('tracking.payment-proof', $order->id) }}" enctype="multipart/form-data">
+                @csrf
+                <label for="payment_proof">Upload bukti pembayaran</label>
+                <input type="file" id="payment_proof" name="payment_proof" accept="image/*" required>
+                <button type="submit">{{ $order->payment_proof ? 'Ganti Bukti Pembayaran' : 'Kirim Bukti Pembayaran' }}</button>
+            </form>
+
+            @if($order->payment_proof)
+                <div class="proof-preview" id="proofPreview">
+                    Bukti pembayaran sudah dikirim.
+                    <a href="{{ asset($order->payment_proof) }}" target="_blank">Lihat ukuran penuh</a>
+                    <img src="{{ asset($order->payment_proof) }}" alt="Bukti pembayaran">
+                </div>
+            @else
+                <div class="proof-preview" id="proofPreview" style="display:none;"></div>
+            @endif
         </div>
 
         <div id="pickupBox" style="margin:10px 0; {{ $order->alamat == 'ambil ditempat' ? '' : 'display:none;' }}">
@@ -193,7 +290,7 @@
                 </div>
 
                 <div class="step {{ in_array($status, ['siap','selesai']) ? 'active' : '' }}" id="stepSiap">
-                    {{ $isPickup ? 'Siap Diambil' : 'Siap Diantar' }}
+                    {{ $isPickup ? 'Siap Diambil' : 'Sedang Diantar' }}
                 </div>
 
                 <div class="step {{ $status == 'selesai' ? 'active' : '' }}" id="stepSelesai">
@@ -257,7 +354,7 @@ function updateTracking(order) {
     document.getElementById('statusStepsWrapper').style.display = isRejected ? 'none' : 'block';
     document.getElementById('pickupBox').style.display = order.alamat === 'ambil ditempat' ? 'block' : 'none';
     document.getElementById('qrisBox').style.display = order.metode === 'qris' ? 'block' : 'none';
-    document.getElementById('stepSiap').innerText = order.alamat === 'ambil ditempat' ? 'Siap Diambil' : 'Siap Diantar';
+    document.getElementById('stepSiap').innerText = order.alamat === 'ambil ditempat' ? 'Siap Diambil' : 'Sedang Diantar';
 
     setStepState('stepBaru', order.status === 'baru');
     setStepState('stepKonfirmasi', ['diproses', 'siap', 'selesai'].includes(order.status));

@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\UserDiscount;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 
 class CustomerController extends Controller
@@ -221,7 +222,45 @@ class CustomerController extends Controller
         'metode' => $order->metode ?? '-',
         'waktu' => $order->waktu ?? '-',
         'alamat' => $order->alamat,
+        'payment_proof' => $order->payment_proof,
+        'payment_proof_url' => $order->payment_proof ? asset($order->payment_proof) : null,
     ]);
+}
+
+    public function uploadPaymentProof(Request $request, $id)
+{
+    $order = Order::where('email', session('customer_email'))
+                    ->where('id', $id)
+                    ->firstOrFail();
+
+    if (($order->metode ?? '') !== 'qris') {
+        return back()->with('error', 'Bukti pembayaran hanya untuk pesanan QRIS.');
+    }
+
+    $request->validate([
+        'payment_proof' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+    ], [
+        'payment_proof.required' => 'Pilih gambar bukti pembayaran terlebih dahulu.',
+        'payment_proof.image' => 'File harus berupa gambar.',
+        'payment_proof.mimes' => 'Format gambar harus JPG, PNG, atau WEBP.',
+        'payment_proof.max' => 'Ukuran gambar maksimal 2 MB.',
+    ]);
+
+    $uploadPath = public_path('uploads/payment-proofs');
+    File::ensureDirectoryExists($uploadPath);
+
+    if ($order->payment_proof && File::exists(public_path($order->payment_proof))) {
+        File::delete(public_path($order->payment_proof));
+    }
+
+    $file = $request->file('payment_proof');
+    $filename = 'order-' . $order->id . '-' . time() . '.' . $file->getClientOriginalExtension();
+    $file->move($uploadPath, $filename);
+
+    $order->payment_proof = 'uploads/payment-proofs/' . $filename;
+    $order->save();
+
+    return redirect('/tracking')->with('success', 'Bukti pembayaran berhasil dikirim.');
 }
 
     public function myOrders()

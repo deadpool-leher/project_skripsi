@@ -64,19 +64,19 @@ Route::post('/login-process', function (Request $request) {
 Route::get('/logout/{role?}', function (Request $request, ?string $role = null) {
     if ($role === 'admin') {
         $request->session()->forget(['admin_user', 'admin_email', 'is_admin']);
-
-        return redirect('/login');
-    }
-
-    if ($role === 'customer') {
+    } elseif ($role === 'customer') {
         $request->session()->forget(['customer_user', 'customer_email', 'cart']);
-
-        return redirect('/login');
+    } else {
+        $request->session()->flush();
     }
 
-    $request->session()->flush();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
-    return redirect('/login');
+    return redirect('/login')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
 })->name('logout');
 
 /*
@@ -137,6 +137,7 @@ Route::middleware('customer')->group(function () {
     Route::post('/checkout', [CustomerController::class, 'checkout']);
     Route::get('/tracking', [CustomerController::class, 'tracking']);
     Route::get('/tracking/data/{id}', [CustomerController::class, 'trackingData'])->name('tracking.data');
+    Route::post('/tracking/payment-proof/{id}', [CustomerController::class, 'uploadPaymentProof'])->name('tracking.payment-proof');
 
     Route::get('/cart/clear', function () {
         session()->forget('cart');
