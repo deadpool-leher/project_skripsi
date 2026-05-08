@@ -18,6 +18,7 @@ class Order extends Model
         'discount_amount',
         'status',
         'metode',
+        'tipe_pengiriman',
         'waktu',
         'alamat',
         'latitude',
@@ -27,15 +28,16 @@ class Order extends Model
 
     protected $casts = [
         'produk' => 'array',
+        'created_at' => 'datetime',
     ];
 
     public function getStatusLabelAttribute()
-{
-    return [
-        'baru' => 'Menunggu Konfirmasi',
-        'diproses' => 'Sedang Diproses',
-        'siap' => 'Siap Diambil',
-        'selesai' => 'Sudah Diambil'
-    ][$this->status] ?? $this->status;
-}
+    {
+        return [
+            'baru' => 'Menunggu Konfirmasi',
+            'diproses' => 'Sedang Diproses',
+            'siap' => 'Siap Diambil',
+            'selesai' => 'Sudah Diambil',
+        ][$this->status] ?? $this->status;
+    }
 }

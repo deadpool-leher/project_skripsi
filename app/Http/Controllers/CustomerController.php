@@ -14,7 +14,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $user = User::where('email', session('email'))->first();
+        $user = User::where('email', session('customer_email'))->first();
 
         $products = Product::where('stok', '>', 0)
             ->orderBy('nama')
@@ -134,7 +134,7 @@ class CustomerController extends Controller
         $discountAmount = 0;
         $discountCode = null;
         $userDiscount = null;
-        $user = User::where('email', session('email'))->first();
+        $user = User::where('email', session('customer_email'))->first();
 
         if (!empty($validated['discount_code'])) {
             if (!$user) {
@@ -168,8 +168,8 @@ class CustomerController extends Controller
         $total = max($subtotal - $discountAmount, 0);
 
         Order::create([
-            'nama' => session('user'),
-            'email' => session('email'),
+            'nama' => session('customer_user'),
+            'email' => session('customer_email'),
             'produk' => $cart,
             'subtotal' => $subtotal,
             'total' => $total,
@@ -197,7 +197,7 @@ class CustomerController extends Controller
 
     public function tracking()
 {
-    $order = Order::where('email', session('email'))
+    $order = Order::where('email', session('customer_email'))
                     ->orderBy('id', 'desc')
                     ->first();
 
@@ -206,7 +206,7 @@ class CustomerController extends Controller
 
     public function trackingData($id)
 {
-    $order = Order::where('email', session('email'))
+    $order = Order::where('email', session('customer_email'))
                     ->where('id', $id)
                     ->firstOrFail();
 
@@ -226,7 +226,7 @@ class CustomerController extends Controller
 
     public function myOrders()
 {
-    $orders = Order::where('email', session('email'))
+    $orders = Order::where('email', session('customer_email'))
                     ->orderBy('id', 'desc')
                     ->get();
 

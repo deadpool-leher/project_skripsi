@@ -65,6 +65,6 @@ class CustomerDiscountController extends Controller
 
     private function currentUser(): User
     {
-        return User::where('email', session('email'))->firstOrFail();
+        return User::where('email', session('customer_email'))->firstOrFail();
     }
 }

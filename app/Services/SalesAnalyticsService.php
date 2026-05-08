@@ -10,9 +10,10 @@ class SalesAnalyticsService
 {
     public function getAnalytics(array $filters = []): array
     {
+        $timezone = config('app.timezone', 'Asia/Makassar');
         $filter = $filters['filter'] ?? 'today';
-        $today = Carbon::today();
-        $yesterday = Carbon::yesterday();
+        $today = Carbon::today($timezone);
+        $yesterday = Carbon::yesterday($timezone);
         $bulan = (int) ($filters['bulan'] ?? $today->month);
         $tahun = (int) ($filters['tahun'] ?? $today->year);
         $baseQuery = Order::query()->where('status', 'selesai');
@@ -76,8 +77,11 @@ class SalesAnalyticsService
                 break;
         }
 
+        $startUtc = $start->copy()->setTimezone('UTC');
+        $endUtc = $end->copy()->setTimezone('UTC');
+
         $orders = (clone $baseQuery)
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('created_at', [$startUtc, $endUtc])
             ->orderBy('created_at')
             ->get();
 
@@ -88,8 +92,11 @@ class SalesAnalyticsService
         if (in_array($filter, ['today', 'yesterday'], true)) {
             $totalPesananHarian = $totalPesanan;
         } elseif ($filter === 'monthly') {
+            $selectedDayStartUtc = $start->copy()->startOfDay()->setTimezone('UTC');
+            $selectedDayEndUtc = $start->copy()->endOfDay()->setTimezone('UTC');
+
             $totalPesananHarian = Order::where('status', 'selesai')
-                ->whereDate('created_at', $start->copy()->toDateString())
+                ->whereBetween('created_at', [$selectedDayStartUtc, $selectedDayEndUtc])
                 ->count();
         }
 
@@ -118,7 +125,8 @@ class SalesAnalyticsService
         $grouped = [];
 
         foreach ($orders as $order) {
-            $date = Carbon::parse($order->created_at);
+            $date = Carbon::parse($order->getRawOriginal('created_at'), 'UTC')
+                ->setTimezone(config('app.timezone', 'Asia/Makassar'));
 
             if ($mode === 'hour') {
                 $key = $date->format('H:00');

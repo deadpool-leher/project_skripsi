@@ -42,9 +42,9 @@ body { margin:0; font-family:Arial, sans-serif; display:flex; background:#f5f7fb
         </div>
     </div>
     <div class="profile">
-        <strong>{{ session('user') }}</strong><br>
-        <small>{{ session('email') }}</small><br><br>
-        <a href="{{ route('login') }}" style="color:red;">Logout</a>
+        <strong>{{ session('customer_user') }}</strong><br>
+        <small>{{ session('customer_email') }}</small><br><br>
+        <a href="{{ route('logout', ['role' => 'customer']) }}" style="color:red;">Logout</a>
     </div>
 </div>
 

@@ -181,9 +181,9 @@ body {
     </div>
 
     <div class="profile">
-        <strong>{{ session('user') }}</strong><br>
-        <small>{{ session('email') }}</small><br><br>
-        <a href="{{ route('login') }}" style="color:red;">Logout</a>
+        <strong>{{ session('admin_user') }}</strong><br>
+        <small>{{ session('admin_email') }}</small><br><br>
+        <a href="{{ route('logout', ['role' => 'admin']) }}" style="color:red;">Logout</a>
     </div>
 
 </div>

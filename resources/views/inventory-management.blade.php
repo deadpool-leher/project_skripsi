@@ -438,9 +438,9 @@
             </div>
 
             <div class="profile">
-                <strong>{{ session('user') }}</strong>
-                <span>{{ session('email') }}</span>
-                <a href="{{ route('login') }}">Logout</a>
+                <strong>{{ session('admin_user') }}</strong>
+                <span>{{ session('admin_email') }}</span>
+                <a href="{{ route('logout', ['role' => 'admin']) }}">Logout</a>
             </div>
         </div>
 

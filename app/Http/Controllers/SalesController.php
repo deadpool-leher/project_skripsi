@@ -13,7 +13,7 @@ class SalesController extends Controller
 
     public function index(Request $request)
     {
-        if (!session('is_admin')) {
+        if (!session('admin_email')) {
             return redirect('/login');
         }
 
@@ -24,7 +24,7 @@ class SalesController extends Controller
 
     public function data(Request $request)
     {
-        if (!session('is_admin')) {
+        if (!session('admin_email')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

@@ -40,19 +40,44 @@ Route::post('/login-process', function (Request $request) {
         return back()->with('error', 'Password salah');
     }
 
-    session([
-        'user' => $user->name,
-        'email' => $user->email
-    ]);
+    $request->session()->regenerate();
 
     if ($user->email === 'admin@gmail.com') {
-        session(['is_admin' => true]);
+        $request->session()->put([
+            'admin_user' => $user->name,
+            'admin_email' => $user->email,
+            'is_admin' => true,
+        ]);
+
         return redirect('/dashboard');
-    } else {
-        return redirect('/customer');
     }
 
+    $request->session()->put([
+        'customer_user' => $user->name,
+        'customer_email' => $user->email,
+    ]);
+
+    return redirect('/customer');
+
 })->name('login.process');
+
+Route::get('/logout/{role?}', function (Request $request, ?string $role = null) {
+    if ($role === 'admin') {
+        $request->session()->forget(['admin_user', 'admin_email', 'is_admin']);
+
+        return redirect('/login');
+    }
+
+    if ($role === 'customer') {
+        $request->session()->forget(['customer_user', 'customer_email', 'cart']);
+
+        return redirect('/login');
+    }
+
+    $request->session()->flush();
+
+    return redirect('/login');
+})->name('logout');
 
 /*
 |--------------------------------------------------------------------------
@@ -69,53 +94,57 @@ Route::get('/register', fn() => view('register'))->name('register');
 | ADMIN
 |--------------------------------------------------------------------------
 */
-Route::get('/incoming-orders', [IncomingOrderController::class, 'index'])->name('incoming.orders');
-Route::get('/incoming-orders/{type}', [IncomingOrderController::class, 'index']);
+Route::middleware('admin')->group(function () {
+    Route::get('/incoming-orders', [IncomingOrderController::class, 'index'])->name('incoming.orders');
+    Route::get('/incoming-orders/{type}', [IncomingOrderController::class, 'index']);
 
-Route::post('/order/store', [IncomingOrderController::class, 'store']);
-Route::get('/order/terima/{id}', [IncomingOrderController::class, 'terima']);
-Route::get('/order/siap/{id}', [IncomingOrderController::class, 'siap']);
-Route::get('/order/selesai/{id}', [IncomingOrderController::class, 'selesai']);
-Route::get('/order/tolak/{id}', [IncomingOrderController::class, 'tolak']);
+    Route::get('/order/terima/{id}', [IncomingOrderController::class, 'terima']);
+    Route::get('/order/siap/{id}', [IncomingOrderController::class, 'siap']);
+    Route::get('/order/selesai/{id}', [IncomingOrderController::class, 'selesai']);
+    Route::get('/order/tolak/{id}', [IncomingOrderController::class, 'tolak']);
 
-Route::get('/admin/promo', [PromoController::class, 'index']);
-Route::post('/admin/promo/update/{id}', [PromoController::class, 'update'])->name('promo.update');
+    Route::get('/admin/promo', [PromoController::class, 'index']);
+    Route::post('/admin/promo/update/{id}', [PromoController::class, 'update'])->name('promo.update');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
-Route::post('/inventory/store', [InventoryController::class, 'store'])->name('inventory.store');
-Route::put('/inventory/update/{id}', [InventoryController::class, 'update'])->name('inventory.update');
-Route::delete('/inventory/delete/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
-Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
-Route::get('/sales/data', [SalesController::class, 'data'])->name('sales.data');
-Route::get('/admin/discount', [AdminDiscountController::class, 'index'])->name('admin.discount.index');
-Route::post('/admin/discount/store', [AdminDiscountController::class, 'store'])->name('admin.discount.store');
-Route::put('/admin/discount/update/{id}', [AdminDiscountController::class, 'update'])->name('admin.discount.update');
-Route::delete('/admin/discount/delete/{id}', [AdminDiscountController::class, 'destroy'])->name('admin.discount.destroy');
+    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::post('/inventory/store', [InventoryController::class, 'store'])->name('inventory.store');
+    Route::put('/inventory/update/{id}', [InventoryController::class, 'update'])->name('inventory.update');
+    Route::delete('/inventory/delete/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+    Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
+    Route::get('/sales/data', [SalesController::class, 'data'])->name('sales.data');
+    Route::get('/admin/discount', [AdminDiscountController::class, 'index'])->name('admin.discount.index');
+    Route::post('/admin/discount/store', [AdminDiscountController::class, 'store'])->name('admin.discount.store');
+    Route::put('/admin/discount/update/{id}', [AdminDiscountController::class, 'update'])->name('admin.discount.update');
+    Route::delete('/admin/discount/delete/{id}', [AdminDiscountController::class, 'destroy'])->name('admin.discount.destroy');
+});
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER
 |--------------------------------------------------------------------------
 */
 
-Route::get('/customer', [CustomerController::class, 'index']);
+Route::middleware('customer')->group(function () {
+    Route::get('/customer', [CustomerController::class, 'index']);
 
-Route::post('/cart/add', [CustomerController::class, 'addToCart']);
-Route::get('/cart/plus/{id}', [CustomerController::class, 'plus']);
-Route::get('/cart/min/{id}', [CustomerController::class, 'min']);
-Route::get('/cart/remove/{id}', [CustomerController::class, 'remove']);
+    Route::post('/cart/add', [CustomerController::class, 'addToCart']);
+    Route::get('/cart/plus/{id}', [CustomerController::class, 'plus']);
+    Route::get('/cart/min/{id}', [CustomerController::class, 'min']);
+    Route::get('/cart/remove/{id}', [CustomerController::class, 'remove']);
 
-Route::post('/checkout', [CustomerController::class, 'checkout']);
-Route::get('/tracking', [CustomerController::class, 'tracking']);
-Route::get('/tracking/data/{id}', [CustomerController::class, 'trackingData'])->name('tracking.data');
+    Route::post('/order/store', [IncomingOrderController::class, 'store']);
+    Route::post('/checkout', [CustomerController::class, 'checkout']);
+    Route::get('/tracking', [CustomerController::class, 'tracking']);
+    Route::get('/tracking/data/{id}', [CustomerController::class, 'trackingData'])->name('tracking.data');
 
-Route::get('/cart/clear', function () {
-    session()->forget('cart');
-    return back();
+    Route::get('/cart/clear', function () {
+        session()->forget('cart');
+        return back();
+    });
+
+    Route::get('/myOrders', [CustomerController::class, 'myOrders']);
+
+    Route::get('/discount', [CustomerDiscountController::class, 'index'])->name('discount');
+    Route::post('/discount/claim/{id}', [CustomerDiscountController::class, 'claim'])->name('discount.claim');
 });
-
-Route::get('/myOrders', [CustomerController::class, 'myOrders']);
-
-Route::get('/discount', [CustomerDiscountController::class, 'index'])->name('discount');
-Route::post('/discount/claim/{id}', [CustomerDiscountController::class, 'claim'])->name('discount.claim');

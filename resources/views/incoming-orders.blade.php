@@ -175,10 +175,10 @@ body {
 
     <!-- BAWAH (PROFILE) -->
     <div class="profile">
-        <strong>{{ session('user') }}</strong>
-        <small>{{ session('email') }}</small>
+        <strong>{{ session('admin_user') }}</strong>
+        <small>{{ session('admin_email') }}</small>
 
-        <a href="{{ route('login') }}" style="color:red;">Logout</a>
+        <a href="{{ route('logout', ['role' => 'admin']) }}" style="color:red;">Logout</a>
     </div>
 
 </div>

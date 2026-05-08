@@ -10,7 +10,7 @@ class DashboardController extends Controller
 {
     public function index()
 {
-    if (!session('is_admin')) {
+    if (!session('admin_email')) {
         return redirect('/login');
     }
 

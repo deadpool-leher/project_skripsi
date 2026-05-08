@@ -12,6 +12,8 @@ use App\Models\UserDiscount;
 use App\Services\SalesAnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class IncomingOrderController extends Controller
 {
@@ -88,7 +90,7 @@ class IncomingOrderController extends Controller
             return back();
         }
 
-        $user = User::where('email', session('email'))->firstOrFail();
+        $user = User::where('email', session('customer_email'))->firstOrFail();
         $discountAmount = 0;
         $discountCode = null;
         $userDiscount = null;
@@ -132,8 +134,8 @@ class IncomingOrderController extends Controller
         $finalTotal = max($total - $discountAmount, 0);
 
         $order = Order::create([
-            'nama' => session('user'),
-            'email' => session('email'),
+            'nama' => session('customer_user'),
+            'email' => session('customer_email'),
             'produk' => $produkList,
             'subtotal' => $total,
             'discount_code' => $discountCode,
@@ -145,7 +147,7 @@ class IncomingOrderController extends Controller
             'alamat' => $request->alamat,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
-            'created_at' => now(),
+            'created_at' => now('UTC'),
         ]);
 
         if ($userDiscount) {
@@ -153,8 +155,7 @@ class IncomingOrderController extends Controller
             $userDiscount->save();
         }
 
-        broadcast(new OrderUpdated($this->salesAnalytics->getAnalytics(['filter' => 'today'])))->toOthers();
-        broadcast(new CustomerOrderUpdated($this->transformCustomerOrder($order), $order->id))->toOthers();
+        $this->broadcastOrderUpdates($order);
 
         session()->forget('cart');
 
@@ -204,8 +205,7 @@ class IncomingOrderController extends Controller
 
         $order = Order::findOrFail($id);
 
-        broadcast(new OrderUpdated($this->salesAnalytics->getAnalytics(['filter' => 'today'])))->toOthers();
-        broadcast(new CustomerOrderUpdated($this->transformCustomerOrder($order), $order->id))->toOthers();
+        $this->broadcastOrderUpdates($order);
 
         return redirect()->route('incoming.orders');
     }
@@ -216,8 +216,7 @@ class IncomingOrderController extends Controller
         $order->status = 'siap';
         $order->save();
 
-        broadcast(new OrderUpdated($this->salesAnalytics->getAnalytics(['filter' => 'today'])))->toOthers();
-        broadcast(new CustomerOrderUpdated($this->transformCustomerOrder($order), $order->id))->toOthers();
+        $this->broadcastOrderUpdates($order);
 
         return redirect()->route('incoming.orders');
     }
@@ -228,8 +227,7 @@ class IncomingOrderController extends Controller
         $order->status = 'selesai';
         $order->save();
 
-        broadcast(new OrderUpdated($this->salesAnalytics->getAnalytics(['filter' => 'today'])))->toOthers();
-        broadcast(new CustomerOrderUpdated($this->transformCustomerOrder($order), $order->id))->toOthers();
+        $this->broadcastOrderUpdates($order);
 
         return redirect()->route('incoming.orders');
     }
@@ -242,8 +240,7 @@ class IncomingOrderController extends Controller
             $order->status = 'ditolak';
             $order->save();
 
-            broadcast(new OrderUpdated($this->salesAnalytics->getAnalytics(['filter' => 'today'])))->toOthers();
-            broadcast(new CustomerOrderUpdated($this->transformCustomerOrder($order), $order->id))->toOthers();
+            $this->broadcastOrderUpdates($order);
         }
 
         return redirect('/incoming-orders');
@@ -263,5 +260,18 @@ class IncomingOrderController extends Controller
             'waktu' => $order->waktu ?? '-',
             'alamat' => $order->alamat,
         ];
+    }
+
+    private function broadcastOrderUpdates(Order $order): void
+    {
+        try {
+            broadcast(new OrderUpdated($this->salesAnalytics->getAnalytics(['filter' => 'today'])))->toOthers();
+            broadcast(new CustomerOrderUpdated($this->transformCustomerOrder($order), $order->id))->toOthers();
+        } catch (Throwable $exception) {
+            Log::warning('Order broadcast failed.', [
+                'order_id' => $order->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 }

@@ -165,10 +165,10 @@ body {
 
     <!--BAGIAN BAWAH -->
     <div class="profile">
-        <strong>{{ session('user') }}</strong>
-        <small>{{ session('email') }}</small>
+        <strong>{{ session('admin_user') }}</strong>
+        <small>{{ session('admin_email') }}</small>
 
-        <a href="{{ route('login') }}">Logout</a>
+        <a href="{{ route('logout', ['role' => 'admin']) }}">Logout</a>
     </div>
 
 </div>
